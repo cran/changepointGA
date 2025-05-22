@@ -70,7 +70,7 @@ Xt = ts.sim(beta=0.5, XMat=XMatT, sigma=1, phi=0.5, theta=NULL,
             Delta=c(2, -2), CpLoc=c(250, 750), seed=1234)
 TsPlotCheck(X=1:N, Xat=seq(from=1, to=N, length=10), Y=Xt, tau=c(250, 750))
 
-GA.res = GA(ObjFunc=BinSearch.BIC, N=N, Xt=Xt)
+GA.res = GA(ObjFunc=ARIMA.BIC, N=N, XMat=XMatT, Xt=Xt)
 GA.res$overbestfit
 GA.res$overbestchrom
 }
