@@ -6,7 +6,7 @@ using namespace Rcpp;
 using namespace arma;
 
 int m, i, j, k, id, jp;
-int popsize, islandSize;
+int popSize, islandSize;
 int lmax;
 
 // [[Rcpp::export]]
@@ -28,13 +28,13 @@ IntegerVector rank_asR(NumericVector x, bool decreasing = false)
 //' @param prange A list object containing the possible range for other
 //' pre-defined model parameters, i.e. AR/MA order of ARMA models.
 //' @param minDist The minimum length between two adjacent changepoints.
-//' @param Pb Same as \code{Pchangepoint}, the probability that a changepoint has occurred.
+//' @param pchangepoint Same as \code{Pchangepoint}, the probability that a changepoint has occurred.
 //' @param mmax The maximum possible number of changepoints in the data set.
 //' @param lmax The maximum possible length of the chromosome representation.
 //' @return A single changepoint configuration format as above.
 //' @export
 // [[Rcpp::export]]
-arma::vec selectTau(int N, List prange, int minDist, double Pb, int mmax, int lmax){
+arma::vec selectTau(int N, List prange, int minDist, double pchangepoint, int mmax, int lmax){
 
   m = 0;
   double a;
@@ -51,7 +51,7 @@ arma::vec selectTau(int N, List prange, int minDist, double Pb, int mmax, int lm
   i = 1 + minDist;
   while(i < N - minDist){
     a = runif(1)[0];
-    if(a <= Pb){
+    if(a <= pchangepoint){
       m = m + 1;
       tau(plen+m) = i;
       i = i + minDist;
@@ -70,7 +70,7 @@ arma::vec selectTau(int N, List prange, int minDist, double Pb, int mmax, int lm
 //' Randomly generate the individuals' chromosomes (changepoint confirgurations)
 //' to construct the first generation population.
 //'
-//' @param popsize An integer represents the number of individual in each
+//' @param popSize An integer represents the number of individual in each
 //' population for GA (or subpopulation for IslandGA).
 //' @param prange Default is \code{NULL} for only changepoint detection. If
 //' \code{prange} is specified as a list object, which contains the range of
@@ -78,25 +78,43 @@ arma::vec selectTau(int N, List prange, int minDist, double Pb, int mmax, int lm
 //' order parameters must be equal to the length of \code{prange}.
 //' @param N The length of time series.
 //' @param minDist The minimum length between two adjacent changepoints.
-//' @param Pb Same as \code{Pchangepoint}, the probability that a changepoint has occurred.
+//' @param pchangepoint Same as \code{pchangepoint} from \code{\link{cptga}} or 
+//' \code{\link{cptgaisl}}, the probability that a changepoint has occurred.
 //' @param mmax The maximum possible number of changepoints in the data set.
 //' @param lmax The maximum possible length of the chromosome representation.
 //' @details
-//' The default population initialization uses \code{\link{selectTau}} to
-//' select the chromosome for the first generation population. Each column from
-//' the produced population matrix represent an chromosome of an individual.
-//' The first element of every chromosome represent the number of changepoints
-//' and the last non-zero element always equal to the length of time series
-//' plus one (N+1).
+//' Each population can be stored in a matrix with \code{lmax} rows and 
+//' \code{popSize} columns, where each column represents an individual chromosome
+//' in the format of
+//' \deqn{C = (m, \boldsymbol{s}, \boldsymbol{\tau}, N+1)',} 
+//' in \code{\link{cptga}} or \code{\link{cptgaisl}}. This function can randomly 
+//' initialize the population matrix with some imposed constraints, such as 
+//' ensuring the number of time points between two adjacent changepoints is 
+//' greater than or equal to \code{minDist}. This prevents unrealistic scenario 
+//' of two changepoints being too close to each other and helps reduce the total 
+//' number of admissible solutions in the search space. Users can adjust the 
+//' level of searching space reduction by setting an appropriate value for 
+//' \code{minDist}. During population initialization, each changepoint location 
+//' in \eqn{\boldsymbol{\tau}} can be selected sequentially. With a specified 
+//' probability \code{pchangepoint} denoting the probability of a time point 
+//' being selected as a changepoint, the first changepoint \eqn{\tau_{1}} is 
+//' randomly picked between \eqn{t=1+minDist} and \eqn{t=N}. Then \eqn{\tau_{2}} 
+//' is randomly selected from a smaller range between \eqn{t=\tau_{1}+minDist} 
+//' and \eqn{t=N}. The process is continued until the last admissible changepoint 
+//' \eqn{t=N-minDist} is exceeded, and the number of changepoints \eqn{m} is 
+//' obtained automatically. For added flexibility, users can specify their own 
+//' population initialization function. The default population initialization uses 
+//' \code{\link{selectTau}} to select the chromosome for the first generation 
+//' population.
 //' @return A matrix that contains each individual's chromosome.
 //' @export
 // [[Rcpp::export]]
-arma::mat random_population(int popsize, List prange, int N, int minDist, double Pb, int mmax, int lmax){
+arma::mat random_population(int popSize, List prange, int N, int minDist, double pchangepoint, int mmax, int lmax){
 
-  arma::mat pop(lmax, popsize, fill::zeros);
+  arma::mat pop(lmax, popSize, fill::zeros);
 
-  for(j=0;j<popsize;j++){
-    pop.col(j) = selectTau(N, prange, minDist, Pb, mmax, lmax);
+  for(j=0;j<popSize;j++){
+    pop.col(j) = selectTau(N, prange, minDist, pchangepoint, mmax, lmax);
   }
 
   return(pop);
@@ -216,7 +234,7 @@ arma::vec uniformcrossover(arma::vec& mom, arma::vec& dad, List prange, int minD
 //' value/larger rank than \code{mom}.
 //' @param pop A matrix contains the chromosomes for all individuals. The number of
 //' rows is equal to \code{lmax} and the number of columns is equal to the
-//' \code{popsize}.
+//' \code{popSize}.
 //' @param popFit A vector contains the objective function value (population fit)
 //' being associated to each individual chromosome from above.
 //' @return A list contains the chromosomes for \code{dad} and \code{mom}.
@@ -224,12 +242,12 @@ arma::vec uniformcrossover(arma::vec& mom, arma::vec& dad, List prange, int minD
 // [[Rcpp::export]]
 List selection_linearrank(arma::mat& pop, arma::vec& popFit){
 
-  popsize = popFit.size();
+  popSize = popFit.size();
   arma::vec myorder = arma::conv_to<arma::vec>::from(arma::sort_index(arma::sort_index(popFit))+1);
-  arma::vec selectrank = popsize - myorder;
-  arma::vec probs0 = 2.0*selectrank/(popsize*(popsize-1));
+  arma::vec selectrank = popSize - myorder;
+  arma::vec probs0 = 2.0*selectrank/(popSize*(popSize-1));
 
-  arma::vec popID = linspace(0, popsize-1, popsize);
+  arma::vec popID = linspace(0, popSize-1, popSize);
   arma::vec parentI = Rcpp::RcppArmadillo::sample(popID, 2, FALSE, probs0);
 
   arma::vec dad = pop.col(parentI(0));

@@ -4,20 +4,20 @@
 \alias{mutation}
 \title{The default mutation operator in genetic algorithm}
 \usage{
-mutation(child, p.range = NULL, minDist, Pb, lmax, mmax, N)
+mutation(child, prange = NULL, minDist, pchangepoint, lmax, mmax, N)
 }
 \arguments{
 \item{child}{The child chromosome resulting from the \code{crossover} genetic
 operator.}
 
-\item{p.range}{Default is \code{NULL} for only changepoint detection. If
-\code{p.range} is specified as a list object, which contains the range of
+\item{prange}{Default is \code{NULL} for only changepoint detection. If
+\code{prange} is specified as a list object, which contains the range of
 each model order parameters for order selection (integers). The number of
-order parameters must be equal to the length of \code{p.range}.}
+order parameters must be equal to the length of \code{prange}.}
 
 \item{minDist}{The required minimum distance between two adjacent changepoints.}
 
-\item{Pb}{The probability of changepoints for every time series.}
+\item{pchangepoint}{The probability of changepoints for every time series.}
 
 \item{lmax}{The user specified maximum number of changepoints, by default,
 as \code{N/2 - 1}.}
@@ -38,13 +38,13 @@ down by the similar individual selection method in population initialization,
 }
 \details{
 A function can apply mutation to the produced child with the specified
-probability \code{Pmutation} in \code{\link{GA_param}} and
-\code{\link{IslandGA_param}}. If order selection is not requested
-(\code{option = "cp"} in \code{GA_param} and \code{Island_GA}), the default
+probability \code{pmutation} in \code{cptga} and
+\code{cptgaisl}. If order selection is not requested
+(\code{option = "cp"} in \code{cptga} and \code{cptgaisl}), the default
 \code{\link{mutation}} operator function uses \code{selectTau} to select
 a completely new individual with a new chromosome as the mutated child.
 For details, see \code{\link{selectTau}}. If order selection is needed
-(\code{option = "both"} in \code{GA_param} and \code{Island_GA}), we first
+(\code{option = "both"} in \code{cptga} and \code{cptgaisl}), we first
 decide whether to keep the produced child's model order with a probability
 of 0.5. If the child's model order is retained, the \code{selectTau}
 function is used to select a completely new individual with a new chromosome

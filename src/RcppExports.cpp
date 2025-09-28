@@ -11,6 +11,19 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// ARIMA_BIC_changepointGA_rcpp
+double ARIMA_BIC_changepointGA_rcpp(NumericVector chromosome_, NumericMatrix XMat_, NumericVector Xt_);
+RcppExport SEXP _changepointGA_ARIMA_BIC_changepointGA_rcpp(SEXP chromosome_SEXP, SEXP XMat_SEXP, SEXP Xt_SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type chromosome_(chromosome_SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type XMat_(XMat_SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Xt_(Xt_SEXP);
+    rcpp_result_gen = Rcpp::wrap(ARIMA_BIC_changepointGA_rcpp(chromosome_, XMat_, Xt_));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rank_asR
 IntegerVector rank_asR(NumericVector x, bool decreasing);
 RcppExport SEXP _changepointGA_rank_asR(SEXP xSEXP, SEXP decreasingSEXP) {
@@ -24,35 +37,35 @@ BEGIN_RCPP
 END_RCPP
 }
 // selectTau
-arma::vec selectTau(int N, List prange, int minDist, double Pb, int mmax, int lmax);
-RcppExport SEXP _changepointGA_selectTau(SEXP NSEXP, SEXP prangeSEXP, SEXP minDistSEXP, SEXP PbSEXP, SEXP mmaxSEXP, SEXP lmaxSEXP) {
+arma::vec selectTau(int N, List prange, int minDist, double pchangepoint, int mmax, int lmax);
+RcppExport SEXP _changepointGA_selectTau(SEXP NSEXP, SEXP prangeSEXP, SEXP minDistSEXP, SEXP pchangepointSEXP, SEXP mmaxSEXP, SEXP lmaxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type N(NSEXP);
     Rcpp::traits::input_parameter< List >::type prange(prangeSEXP);
     Rcpp::traits::input_parameter< int >::type minDist(minDistSEXP);
-    Rcpp::traits::input_parameter< double >::type Pb(PbSEXP);
+    Rcpp::traits::input_parameter< double >::type pchangepoint(pchangepointSEXP);
     Rcpp::traits::input_parameter< int >::type mmax(mmaxSEXP);
     Rcpp::traits::input_parameter< int >::type lmax(lmaxSEXP);
-    rcpp_result_gen = Rcpp::wrap(selectTau(N, prange, minDist, Pb, mmax, lmax));
+    rcpp_result_gen = Rcpp::wrap(selectTau(N, prange, minDist, pchangepoint, mmax, lmax));
     return rcpp_result_gen;
 END_RCPP
 }
 // random_population
-arma::mat random_population(int popsize, List prange, int N, int minDist, double Pb, int mmax, int lmax);
-RcppExport SEXP _changepointGA_random_population(SEXP popsizeSEXP, SEXP prangeSEXP, SEXP NSEXP, SEXP minDistSEXP, SEXP PbSEXP, SEXP mmaxSEXP, SEXP lmaxSEXP) {
+arma::mat random_population(int popSize, List prange, int N, int minDist, double pchangepoint, int mmax, int lmax);
+RcppExport SEXP _changepointGA_random_population(SEXP popSizeSEXP, SEXP prangeSEXP, SEXP NSEXP, SEXP minDistSEXP, SEXP pchangepointSEXP, SEXP mmaxSEXP, SEXP lmaxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type popsize(popsizeSEXP);
+    Rcpp::traits::input_parameter< int >::type popSize(popSizeSEXP);
     Rcpp::traits::input_parameter< List >::type prange(prangeSEXP);
     Rcpp::traits::input_parameter< int >::type N(NSEXP);
     Rcpp::traits::input_parameter< int >::type minDist(minDistSEXP);
-    Rcpp::traits::input_parameter< double >::type Pb(PbSEXP);
+    Rcpp::traits::input_parameter< double >::type pchangepoint(pchangepointSEXP);
     Rcpp::traits::input_parameter< int >::type mmax(mmaxSEXP);
     Rcpp::traits::input_parameter< int >::type lmax(lmaxSEXP);
-    rcpp_result_gen = Rcpp::wrap(random_population(popsize, prange, N, minDist, Pb, mmax, lmax));
+    rcpp_result_gen = Rcpp::wrap(random_population(popSize, prange, N, minDist, pchangepoint, mmax, lmax));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -86,6 +99,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_changepointGA_ARIMA_BIC_changepointGA_rcpp", (DL_FUNC) &_changepointGA_ARIMA_BIC_changepointGA_rcpp, 3},
     {"_changepointGA_rank_asR", (DL_FUNC) &_changepointGA_rank_asR, 2},
     {"_changepointGA_selectTau", (DL_FUNC) &_changepointGA_selectTau, 6},
     {"_changepointGA_random_population", (DL_FUNC) &_changepointGA_random_population, 7},

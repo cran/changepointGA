@@ -4,22 +4,22 @@
 \alias{AMOCpopulation}
 \title{Random population initialization for AMOC problem}
 \usage{
-AMOCpopulation(popsize, p.range, N, minDist, Pchangepoint, mmax, lmax)
+AMOCpopulation(popSize, prange, N, minDist, pchangepoint, mmax, lmax)
 }
 \arguments{
-\item{popsize}{An integer represents the number of individual in each
+\item{popSize}{An integer represents the number of individual in each
 population for GA (or subpopulation for IslandGA).}
 
-\item{p.range}{Default is \code{NULL} for only changepoint detection. If
-\code{p.range} is specified as a list object, which contains the range of
+\item{prange}{Default is \code{NULL} for only changepoint detection. If
+\code{prange} is specified as a list object, which contains the range of
 each model order parameters for order selection (integers). The number of
-order parameters must be equal to the length of \code{p.range}.}
+order parameters must be equal to the length of \code{prange}.}
 
 \item{N}{The length of time series.}
 
 \item{minDist}{The minimum length between two adjacent changepoints.}
 
-\item{Pchangepoint}{The probability that a changepoint can occur.}
+\item{pchangepoint}{The probability that a changepoint can occur.}
 
 \item{mmax}{The maximum possible number of changepoints in the data set.}
 

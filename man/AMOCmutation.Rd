@@ -6,9 +6,9 @@
 \usage{
 AMOCmutation(
   child,
-  p.range = NULL,
+  prange = NULL,
   minDist,
-  Pchangepoint = NULL,
+  pchangepoint = NULL,
   lmax = NULL,
   mmax = NULL,
   N = NULL
@@ -18,7 +18,7 @@ AMOCmutation(
 \item{child}{The child chromosome resulting from the \code{crossover} genetic
 operator.}
 
-\item{p.range}{The default value is \code{NULL}. If there is no requirement
+\item{prange}{The default value is \code{NULL}. If there is no requirement
 on model order selection, such an auxiliary argument is needed for \code{GA}
 and \code{IslandGA} functions.}
 
@@ -26,7 +26,7 @@ and \code{IslandGA} functions.}
 \code{\link{AMOCselection}} operator, which is also the jump magnitude in the
 \code{AMOCmutation} operator.}
 
-\item{Pchangepoint}{An auxiliary argument is needed for \code{GA}
+\item{pchangepoint}{An auxiliary argument is needed for \code{GA}
 and \code{IslandGA} functions.}
 
 \item{lmax}{An auxiliary argument is needed for \code{GA} and \code{IslandGA}
