@@ -18,7 +18,7 @@ thetaT <- c(0.8)
 DeltaT <- c(2, -2)
 CpLocT <- c(50, 150)
 
-myts <- ts.sim(beta = betaT, XMat = XMatT, sigma = sigmaT, phi = phiT, theta = thetaT, Delta = DeltaT, CpLoc = CpLocT, seed = 1234)
+myts <- ts_sim(Ts=Ts, beta = betaT, XMat = XMatT, sigma = sigmaT, phi = phiT, theta = thetaT, Delta = DeltaT, CpLoc = CpLocT, seed = 1234)
 str(myts)
 
 ## ----fig.align = "center", fig.height=4, fig.width=6--------------------------
@@ -41,7 +41,7 @@ for (i in 1:(m + 1)) {
 }
 
 ## -----------------------------------------------------------------------------
-ARIMA.BIC.Order(chromosome = c(2, 1, 1, 50, 150, Ts + 1), plen = 2, XMat = XMatT, Xt = myts)
+arima_bic_order_pq(chromosome = c(2, 1, 1, 50, 150, Ts + 1), plen = 2, XMat = XMatT, Xt = myts)
 
 ## -----------------------------------------------------------------------------
 N <- Ts
@@ -54,8 +54,8 @@ suggestions <- list(NULL, c(50), c(50, 150), c(50, 100, 150))
 XMatEst <- matrix(1, nrow = N, ncol = 1)
 
 ## -----------------------------------------------------------------------------
-res.changepointGA <- suppressWarnings(cptga(
-  ObjFunc = ARIMA.BIC.Order,
+reschangepointGA <- suppressWarnings(cptga(
+  ObjFunc = arima_bic_order_pq,
   N = N,
   prange = prange,
   suggestions = suggestions,
@@ -63,13 +63,13 @@ res.changepointGA <- suppressWarnings(cptga(
   XMat = XMatEst,
   Xt = myts
 ))
-print(res.changepointGA)
-summary(res.changepointGA)
+print(reschangepointGA)
+summary(reschangepointGA)
 
 ## -----------------------------------------------------------------------------
 tim1 <- Sys.time()
-res.Island.changepointGA <- suppressWarnings(cptgaisl(
-  ObjFunc = ARIMA.BIC.Order,
+resIslandchangepointGA <- suppressWarnings(cptgaisl(
+  ObjFunc = arima_bic_order_pq,
   N = N,
   prange = prange,
   popSize = 160,
@@ -83,14 +83,14 @@ res.Island.changepointGA <- suppressWarnings(cptgaisl(
 ))
 tim2 <- Sys.time()
 tim2 - tim1
-print(res.Island.changepointGA)
-summary(res.Island.changepointGA)
-plot(res.Island.changepointGA, data = myts)
+print(resIslandchangepointGA)
+summary(resIslandchangepointGA)
+plot(resIslandchangepointGA, data = myts)
 
 ## -----------------------------------------------------------------------------
 tim3 <- Sys.time()
-res.Island.changepointGA <- suppressWarnings(cptgaisl(
-  ObjFunc = ARIMA.BIC.Order,
+resIslandchangepointGA <- suppressWarnings(cptgaisl(
+  ObjFunc = arima_bic_order_pq,
   N = N,
   prange = prange,
   popSize = 160,
@@ -107,15 +107,15 @@ res.Island.changepointGA <- suppressWarnings(cptgaisl(
 
 tim4 <- Sys.time()
 tim4 - tim3
-print(res.Island.changepointGA)
-summary(res.Island.changepointGA)
-plot(res.Island.changepointGA, data = myts)
+print(resIslandchangepointGA)
+summary(resIslandchangepointGA)
+plot(resIslandchangepointGA, data = myts)
 
 ## -----------------------------------------------------------------------------
-true.tau <- c(50, 150)
-tau.Island <- res.Island.changepointGA@overbestchrom
-est.tau <- c(tau.Island[4:(4 + tau.Island[1] - 1)])
-cptDist(tau1 = true.tau, tau2 = est.tau, N = N)
+truetau <- c(50, 150)
+tauIsland <- resIslandchangepointGA@overbestchrom
+esttau <- c(tauIsland[4:(4 + tauIsland[1] - 1)])
+cpt_dist(tau1 = truetau, tau2 = esttau, N = N)
 
 ## -----------------------------------------------------------------------------
 sessionInfo()

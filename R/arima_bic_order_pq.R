@@ -1,4 +1,4 @@
-#' Calculating BIC for Multiple changepoint detection with model order selection
+#' Calculating BIC for Multiple changepoint detection with AR and MA order selection
 #'
 #' The objective function for changepoint search in Autoregressive
 #' moving average with model order selection via Bayesian Information Criterion
@@ -22,19 +22,19 @@
 #' @useDynLib changepointGA
 #' @export
 #' @examples
-#' N <- 1000
-#' XMatT <- matrix(1, nrow = N, ncol = 1)
-#' Xt <- ts.sim(
-#'   beta = 0.5, XMat = XMatT, sigma = 1, phi = 0.5, theta = 0.8,
+#' Ts <- 1000
+#' XMatT <- matrix(1, nrow = Ts, ncol = 1)
+#' Xt <- ts_sim(
+#'   Ts = Ts, beta = 0.5, XMat = XMatT, sigma = 1, phi = 0.5, theta = 0.8,
 #'   Delta = c(2, -2), CpLoc = c(250, 750), seed = 1234
 #' )
 #'
 #' # one chromosome representation
 #' chromosome <- c(2, 1, 1, 250, 750, 1001)
-#' ARIMA.BIC.Order(chromosome, plen = 2, XMat = XMatT, Xt = Xt)
-ARIMA.BIC.Order <- function(chromosome, plen = 2, XMat, Xt) {
+#' arima_bic_order_pq(chromosome, plen = 2, XMat = XMatT, Xt = Xt)
+arima_bic_order_pq <- function(chromosome, plen = 2, XMat, Xt) {
   m <- chromosome[1]
-  p.order <- chromosome[2:(plen + 1)]
+  porder <- chromosome[2:(plen + 1)]
   tau <- chromosome[(plen + 2):length(chromosome)]
   N <- length(Xt) # length of the series
 
@@ -42,32 +42,31 @@ ARIMA.BIC.Order <- function(chromosome, plen = 2, XMat, Xt) {
     ## Case 1, Zero Changepoint
     DesignX <- XMat
     fit <- try(arima(Xt,
-      order = c(p.order[1], 0, p.order[2]), xreg = DesignX, include.mean = F,
+      order = c(porder[1], 0, porder[2]), xreg = DesignX, include.mean = F,
       optim.control = list(maxit = 50)
     ))
     if (inherits(fit, "try-error")) {
-      BIC.obj <- NA
+      bic_obj <- NA
     } else {
-      BIC.obj <- BIC(fit)
+      bic_obj <- BIC(fit)
     }
   } else {
-    tau <- tau[tau > 1 & tau < N + 1] # keep CPT locations only
-    tmptau <- unique(c(tau, N))
+    tmptau <- unique(c(tau, N + 1))
     CpMat <- matrix(0, nrow = N, ncol = length(tmptau) - 1)
     for (i in 1:NCOL(CpMat)) {
-      CpMat[(tmptau[i] + 1):tmptau[i + 1], i] <- 1
+      CpMat[tmptau[i]:(tmptau[i + 1] - 1), i] <- 1
     }
     DesignX <- cbind(XMat, CpMat)
     fit <- try(arima(Xt,
-      order = c(p.order[1], 0, p.order[2]), xreg = DesignX, include.mean = F,
+      order = c(porder[1], 0, porder[2]), xreg = DesignX, include.mean = F,
       optim.control = list(maxit = 50)
     ))
     if (inherits(fit, "try-error")) {
-      BIC.obj <- NA
+      bic_obj <- NA
     } else {
-      BIC.obj <- BIC(fit)
+      bic_obj <- BIC(fit)
     }
   }
 
-  return(BIC.obj)
+  return(bic_obj)
 }
