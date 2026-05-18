@@ -7,6 +7,8 @@ knitr::opts_chunk$set(
 ## -----------------------------------------------------------------------------
 library(changepointGA)
 
+set.seed(1234)
+
 ## -----------------------------------------------------------------------------
 Ts <- 200
 betaT <- c(0.5) # intercept
@@ -113,8 +115,7 @@ plot(resIslandchangepointGA, data = myts)
 
 ## -----------------------------------------------------------------------------
 truetau <- c(50, 150)
-tauIsland <- resIslandchangepointGA@overbestchrom
-esttau <- c(tauIsland[4:(4 + tauIsland[1] - 1)])
+esttau <- c(45, 147)
 cpt_dist(tau1 = truetau, tau2 = esttau, N = N)
 
 ## -----------------------------------------------------------------------------

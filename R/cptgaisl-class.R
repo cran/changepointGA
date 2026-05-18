@@ -125,11 +125,18 @@ print.summary.cptgaisl <- function(x, digits = getOption("digits"), max_display 
   cat(paste("   Crossover probability   = ", format(x@pcrossover, digits = digits), "\n"))
   cat(paste("   Mutation probability    = ", format(x@pmutation, digits = digits), "\n"))
   cat(paste("   Changepoint probability = ", format(x@pchangepoint, digits = digits), "\n"))
+  cat(paste("   minDist                 = ", x@minDist, "\n"))
   cat(paste("   Task mode               = ", x@option, "\n"))
   cat(paste("   Parallel Usage          = ", x@parallel, "\n"))
   if (x@parallel) {
     cat(paste("   Number of thread      = ", x@nCore, "\n"))
   }
+  seed_print <- if (is.null(x@seed) || length(x@seed) == 0) {
+    "NULL"
+  } else {
+    as.character(x@seed)
+  }
+  cat(paste("   Seed                    = ", seed_print, "\n"))
   if (!is.null(x@suggestions)) {
     cat("   Suggestions: \n")
     for (i in seq_along(x@suggestions)) {
@@ -142,7 +149,7 @@ print.summary.cptgaisl <- function(x, digits = getOption("digits"), max_display 
       cat("\n")
     }
   }
-  cat("\n##### Island GA results ##### \n")
+  cat("\n##### Island Model GA results ##### \n")
   cat(paste("   Optimal Fitness value =", format(x@overbestfit, digits = digits), "\n"))
   cat(paste("   Optimal Solution: \n"))
   m.sol <- x@overbestchrom[1]
@@ -208,6 +215,7 @@ setMethod("summary", "cptgaisl", function(object, ...) {
 #' changepoint detection procedure.
 #' @param data A numeric vector representing the observed univariate time series.
 #' @param main Optional main title for the plot.
+#' @param show_segmean Binary, whether to include the segments' means.
 #' @param XTickLab Optional vector (e.g., numeric or date) for custom x-axis labels.
 #'        Must be the same length as \code{data}.
 #' @param XTickPos Optional vector specifying which elements of \code{XTickLab} to show as ticks.
@@ -236,6 +244,7 @@ setMethod("summary", "cptgaisl", function(object, ...) {
 #' @exportS3Method
 plot.cptgaisl <- function(x,
                           data,
+                          show_segmean = TRUE,
                           main = NULL,
                           XTickLab = NULL,
                           XTickPos = NULL,
@@ -248,9 +257,10 @@ plot.cptgaisl <- function(x,
   Ts <- length(data)
   use_custom_X <- !is.null(XTickLab) && length(XTickLab) == Ts
   plot_x <- if (use_custom_X) XTickLab else 1:Ts
-
+  
   chrom <- x@overbestchrom
   m <- chrom[1]
+  
   if (m > 0) {
     tau <- if (x@option == "both") {
       n.hyparam <- length(x@prange)
@@ -258,65 +268,71 @@ plot.cptgaisl <- function(x,
     } else {
       chrom[2:(1 + m)]
     }
+    tau <- sort(unique(tau))
   } else {
-    tau <- NULL
+    tau <- integer(0)
   }
-
+  
   fit <- sprintf("%.3f", x@overbestfit)
-  tau_vals <- if (!is.null(tau)) if (use_custom_X) XTickLab[tau] else tau else NULL
-  changepoint_str <- if (!is.null(tau_vals)) {
-    paste0("Changepoints: ", paste(tau_vals, collapse = ", "))
+  
+  starts <- c(1, tau + 1)
+  ends   <- c(tau, Ts)
+  
+  ## changepoint labels
+  if (length(tau) > 0) {
+    tau_vals <- if (use_custom_X) XTickLab[tau] else tau
+    changepoint_str <- paste0("Changepoints: ", paste(tau_vals, collapse = ", "))
   } else {
-    "Changepoint Locations: None"
+    changepoint_str <- "Changepoint Locations: None"
   }
-
-  op <- par(no.readonly = TRUE)
-  on.exit(par(op))
-
+  
+  op <- par(c("mar", "cex.lab", "cex.axis", "cex.main"))
+  on.exit(par(op), add = TRUE)
+  
   par(
     mar = c(5, 5, 6, 2),
     cex.lab = cex.lab,
     cex.axis = cex.axis,
     cex.main = cex.main
   )
-
+  
   plot(plot_x, data,
-    type = "l",
-    xlab = XAxisLab,
-    ylab = YAxisLab,
-    xaxt = "n",
-    ...
-  )
+       type = "l",
+       xlab = XAxisLab,
+       ylab = YAxisLab,
+       xaxt = "n",
+       ...)
+  
   if (!is.null(main)) {
-    title(main = main, line = 3.5) # push title down a bit
+    title(main = main, line = 3.5)
   }
-
+  
   if (!is.null(XTickPos) && use_custom_X) {
-    axis(1, at = match(XTickPos, XTickLab), labels = XTickPos)
+    axis(1, at = XTickPos, labels = XTickPos)
   } else {
     axis(1, at = pretty(plot_x), labels = pretty(plot_x))
   }
-
-  if (!is.null(tau)) {
+  
+  if (length(tau) > 0) {
     cp_x <- if (use_custom_X) XTickLab[tau] else tau
     abline(v = cp_x, col = "blue", lty = "dashed", lwd = lwd)
-
-    tau_full <- c(1, tau, Ts + 1)
-    seg_len <- diff(tau_full)
-    ff <- rep(0:m, times = seg_len)
-    mu.seg <- tapply(data, ff, mean)
-
+  }
+  
+  if (show_segmean) {
+    mu.seg <- sapply(seq_along(starts), function(i) {
+      mean(data[starts[i]:ends[i]])
+    })
+    
     for (i in seq_along(mu.seg)) {
-      segments(
-        x0 = if (use_custom_X) XTickLab[tau_full[i]] else tau_full[i],
-        y0 = mu.seg[i],
-        x1 = if (use_custom_X) XTickLab[tau_full[i + 1]] else tau_full[i + 1],
-        y1 = mu.seg[i],
-        col = "red", lty = "dashed", lwd = lwd
-      )
+      x0 <- if (use_custom_X) XTickLab[starts[i]] else starts[i]
+      x1 <- if (use_custom_X) XTickLab[ends[i]]   else ends[i]
+      
+      segments(x0 = x0, y0 = mu.seg[i],
+               x1 = x1, y1 = mu.seg[i],
+               col = "red", lty = "dashed", lwd = lwd)
     }
   }
-
+  
   mtext(paste("Fitness:", fit), side = 3, line = 1.5, adj = 0, cex = cex.lab)
   mtext(changepoint_str, side = 3, line = 0.5, adj = 0, cex = cex.lab)
 }

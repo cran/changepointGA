@@ -25,6 +25,8 @@ The **changepointGA** package applies Genetic Algorithms (GA) to detect both sin
 
 ```{r}
 library(changepointGA)
+
+set.seed(1234)
 ```
 
 ## Simulate a time series data with changepoints
@@ -35,7 +37,14 @@ $$Z_{t}=\mu_{t}+e_{t}.$$
 
 The model could be specified by the arguments of `phi` and `theta`, representing the AR coefficients of and the MA coefficients for the ARMA model. The default values of `phi` and `theta` are `NULL`, generating time series with $e_{t}$ that are independent and identically $N(0,\sigma^{2})$ distributed. If we assign values to `phi` and/or `theta`, the $e_{t}$ will be generated from an ARMA($p$,$q$) process, where $p$ equals the number of values in `phi` and $q$ equals the number of values in `theta`. For the above model, $\mu_{t}$ denotes time-varying mean function and the mean changepoint effects could be introduced through indicator functions to $\mu_{t}$. Note that the **changepointGA** could also work with other time series model as long as the fitness function is appropriately specified. To illustrate the package usage, we will generate the $e_{t}$ following an ARMA($p=1$,$q=1$) process. The AR coefficient is $\phi=0.5$ and the MA coefficient is $\theta=0.8$. The time varying mean values are generated through the following equation,
 
-$$\mu_{t}=\beta_{0}+\Delta_{1}I_{[t>\tau_{1}]} + \Delta_{2}I_{[t>\tau_{2}]},$$
+$$\mu_{t}=    \begin{cases}
+        \beta_0, 
+        & 1 \leq t \leq \tau_1, \\
+        \beta_0 + \Delta_1, 
+        & \tau_1 + 1 \leq t \leq \tau_2, \\
+        \beta_0 + \Delta_2, 
+        & \tau_2 + 1 \leq t \leq N.
+    \end{cases}$$
 
 including the intercept term with $\beta_{0}=0.5$ and two changepoints at $\tau_{1}=125$ and $\tau_{2}=375$ with the mean changing effects of $\Delta_{1}=2$ and $\Delta_{2}=-2$. The users can also include additional covariates into matrix (`XMatT` below) for other possible model dynamics, such as tread and seasonalities.
 
@@ -231,8 +240,7 @@ It is important to measure how different the estimated changepoint configuration
 
 ```{r}
 truetau <- c(50, 150)
-tauIsland <- resIslandchangepointGA@overbestchrom
-esttau <- c(tauIsland[4:(4 + tauIsland[1] - 1)])
+esttau <- c(45, 147)
 cpt_dist(tau1 = truetau, tau2 = esttau, N = N)
 ```
 
